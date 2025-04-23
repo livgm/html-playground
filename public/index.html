@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Playground</title>
+        <title>HTML Playground</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
 
         <!-- External styles -->
@@ -16,7 +16,7 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/theme/material-darker.min.css"
         />
     </head>
-    <body>
+    <body class="light-theme">
         <header>
             <button id="layoutBtn">Layout wechseln</button>
             <button id="toggleJsBtn">JS an/aus</button>
@@ -26,35 +26,32 @@
             </select>
             <button id="saveBtn">Speichern</button>
             <button id="exportBtn">Exportieren</button>
-            <span id="link"></span>
             <input type="file" id="zipInput" accept=".zip" />
+            <label for="zipInput" class="upload-btn">Projekt hochladen</label>
             <input type="file" id="assetInput" multiple hidden />
-            <label for="assetInput">Anhänge hochladen</label>
+            <label for="assetInput" class="upload-btn"">Anhänge hochladen</label>
             <button id="manageAssetsBtn">Anhänge</button>
+            <span id="link"></span>
             <span id="status"></span>
         </header>
 
         <div id="workspace" class="vertical">
             <div id="editors" class="vertical">
                 <div class="pane">
-                    <h3>HTML</h3>
+                    <h3 id="h-html"">HTML</h3>
                     <textarea id="html"></textarea>
                 </div>
                 <div class="pane">
-                    <h3>CSS</h3>
+                    <h3 id="h-css"">CSS</h3>
                     <textarea id="css"></textarea>
                 </div>
                 <div class="pane js-pane">
-                    <h3>JS</h3>
+                    <h3 id="h-js">JS</h3>
                     <textarea id="js"></textarea>
                 </div>
             </div>
             <iframe id="preview"></iframe>
         </div>
-
-        <footer>
-            Importiere direkt das zip von github & lade es hier hoch!
-        </footer>
 
         <!-- Asset Manager Modal -->
         <div id="assetManagerModal" class="modal hidden">
