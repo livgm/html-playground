@@ -18,19 +18,19 @@
     </head>
     <body>
         <header>
-            <button id="layoutBtn">Switch Layout</button>
-            <button id="toggleJsBtn">Toggle JS Pane</button>
+            <button id="layoutBtn">Layout wechseln</button>
+            <button id="toggleJsBtn">JS an/aus</button>
 
             <select id="templateSelect">
-                <option value>Templates…</option>
+                <option value>Vorlagen…</option>
             </select>
-            <button id="saveBtn">Save</button>
-            <button id="exportBtn">Export ZIP</button>
+            <button id="saveBtn">Speichern</button>
+            <button id="exportBtn">Exportieren</button>
             <span id="link"></span>
             <input type="file" id="zipInput" accept=".zip" />
             <input type="file" id="assetInput" multiple hidden />
-            <label for="assetInput">Upload Assets</label>
-            <button id="manageAssetsBtn">Manage Assets</button>
+            <label for="assetInput">Anhänge hochladen</label>
+            <button id="manageAssetsBtn">Anhänge</button>
             <span id="status"></span>
         </header>
 
@@ -59,9 +59,9 @@
         <!-- Asset Manager Modal -->
         <div id="assetManagerModal" class="modal hidden">
             <div class="modal-content">
-                <h2>Manage Assets</h2>
+                <h2>Anhänge</h2>
                 <ul id="assetManagerList"></ul>
-                <button id="assetManagerClose">Close</button>
+                <button id="assetManagerClose">Schließen</button>
             </div>
         </div>
 

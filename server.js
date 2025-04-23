@@ -190,7 +190,7 @@ app.get("/api/templates", (_req, res) => {
 app.get("/api/template/:id", (req, res) => {
   const filePath = path.join(templatesDir, `${req.params.id}.json`);
   if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: "Template not found" });
+    return res.status(404).json({ error: "Template nicht gefunden" });
   }
   res.json(JSON.parse(fs.readFileSync(filePath)));
 });
@@ -227,7 +227,6 @@ app.post("/importzip", zipUpload.single("zip"), (req, res) => {
 app.post("/package/:id", (req, res) => {
   const { html = "", css = "", js = "" } = req.body;
   const allCode = html + css + js;
-  console.log("ALL CODE: ", allCode);
   const used = new Set();
   (allCode.match(/assets\/([^"'()\s]+)/g) || []).forEach((match) => {
     // match is e.g. "assets/foo.png"

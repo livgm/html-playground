@@ -71,14 +71,6 @@ function renderPreview() {
 initPreview();
 [eHTML, eCSS, eJS].forEach((ed) => ed.on("change", renderPreview));
 
-/*function renderPreview() {
-  const h =
-  const c =
-  const js = eJS.getValue();
-  console.log(h);
-  preview.srcdoc = `<!doctype html><html><head><style>${c}</style></head><body>${h}<script>${js}</script></body></html>`;
-}*/
-
 // Utility: scan code blobs for used asset filenames
 function findUsedAssets() {
   const code = eHTML.getValue() + eCSS.getValue() + eJS.getValue();
@@ -102,12 +94,12 @@ mgrBtn.addEventListener("click", async () => {
   listEl.innerHTML = "";
   all.forEach((file) => {
     const li = document.createElement("li");
-    li.textContent = file + (used.has(file) ? " (in use)" : "");
+    li.textContent = file + (used.has(file) ? " (wird benutzt)" : "");
     if (!used.has(file)) {
       const del = document.createElement("button");
-      del.textContent = "Delete";
+      del.textContent = "Löschen";
       del.onclick = async () => {
-        if (!confirm(`Remove ${file}?`)) return;
+        if (!confirm(`${file} wirklich löschen?`)) return;
         await fetch(`/api/assets/${currentId}/${file}`, { method: "DELETE" });
         li.remove(); // remove from UI
       };
@@ -166,8 +158,6 @@ fetch("/api/templates")
 let currentId = (location.pathname.match(/^\/p\/(\S+)/) || [])[1] || null;
 const linkElem = $("#link");
 if (currentId) linkElem.textContent = decodeURI(currentId);
-console.log("LOCATION:", location.pathname);
-console.log("CURRENT ID:", currentId);
 async function saveProject() {
   const payload = {
     html: eHTML.getValue(),
@@ -213,7 +203,8 @@ $("#exportBtn").addEventListener("click", async () => {
 
 // Upload assets
 $("#assetInput").addEventListener("change", async (e) => {
-  if (!currentId) return alert("Save once before uploading assets");
+  if (!currentId)
+    return alert("Du musst einmal speichern, bevor du etwas hochladen kannst");
   const fd = new FormData();
   [...e.target.files].forEach((f) => fd.append("files", f));
   await fetch(`/upload/${currentId}`, { method: "POST", body: fd });

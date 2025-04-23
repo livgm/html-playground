@@ -1,0 +1,7 @@
+{
+  "id": "minta-1",
+  "name": "MINTA 1",
+  "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\">\n  <title>Starter</title>\n</head>\n<body>\n  <h1>Willkommen zum MINTA WORKSHOP!!</h1>\n  <p>Dies ist dein Code-Starter.</p>\n</body>\n</html>",
+  "css": "/* Füge hier dein CSS ein */\nbody {\n  font-family: sans-serif;\n  margin: 1rem;\n}\nh1 {\n  color: #4a90e2;\n}",
+  "js": "// Füge hier dein JavaScript ein\nconsole.log('Starte dein Projekt!');"
+}
