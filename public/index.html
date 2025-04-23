@@ -4,7 +4,9 @@
         <meta charset="utf-8" />
         <title>Playground</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <!-- CodeMirror core & extras -->
+
+        <!-- External styles -->
+        <link rel="stylesheet" href="/style.css" />
         <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/codemirror.min.css"
@@ -13,101 +15,25 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/theme/material-darker.min.css"
         />
-        <style>
-            :root {
-                --sidebar: 350px;
-            }
-            body {
-                margin: 0;
-                font-family: system-ui, sans-serif;
-                height: 100vh;
-                display: grid;
-                grid-template-rows: auto 1fr auto;
-            }
-            header,
-            footer {
-                background: #111;
-                color: #fff;
-                padding: 0.5rem 1rem;
-                display: flex;
-                gap: 0.5rem;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-            #workspace {
-                height: 100%;
-                display: grid;
-            }
-            /* vertical: editors stacked left, preview right */
-            #workspace.vertical {
-                grid-template-columns: var(--sidebar) 1fr;
-            }
-            #editors.vertical {
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-            }
-            /* horizontal: editors top, preview bottom */
-            #workspace.horizontal {
-                grid-template-rows: auto 1fr;
-            }
-            #editors.horizontal {
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr;
-                height: 100%;
-            }
-            .pane {
-                display: flex;
-                flex-direction: column;
-                border: 1px solid #333;
-            }
-            .pane h3 {
-                margin: 0.25rem 0.5rem;
-                font-size: 0.8rem;
-                color: #bbb;
-            }
-            .CodeMirror {
-                flex: 1 1 auto;
-                font-size: 0.85rem;
-                background: #1e1e1e;
-                border: none;
-            }
-            iframe {
-                width: 100%;
-                height: 100%;
-                border: none;
-                background: #fff;
-            }
-            select,
-            button,
-            label {
-                background: #333;
-                color: #fff;
-                border: none;
-                padding: 0.25rem 0.5rem;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            #link {
-                color: #0af;
-            }
-        </style>
     </head>
     <body>
         <header>
             <button id="layoutBtn">Switch Layout</button>
+            <button id="toggleJsBtn">Toggle JS Pane</button>
+
             <select id="templateSelect">
                 <option value>Templates…</option>
             </select>
             <button id="saveBtn">Save</button>
-            <button id="exportBtn">Export ZIP</button>
-
+            <button id="exportBtn">Export ZIP</button>
             <span id="link"></span>
             <input type="file" id="zipInput" accept=".zip" />
             <input type="file" id="assetInput" multiple hidden />
-            <label for="assetInput">Upload Assets</label>
+            <label for="assetInput">Upload Assets</label>
+            <button id="manageAssetsBtn">Manage Assets</button>
             <span id="status"></span>
         </header>
+
         <div id="workspace" class="vertical">
             <div id="editors" class="vertical">
                 <div class="pane">
@@ -118,18 +44,28 @@
                     <h3>CSS</h3>
                     <textarea id="css"></textarea>
                 </div>
-                <div class="pane">
+                <div class="pane js-pane">
                     <h3>JS</h3>
                     <textarea id="js"></textarea>
                 </div>
             </div>
             <iframe id="preview"></iframe>
         </div>
+
         <footer>
-            Auto‑saves every 2 s after changes. Ctrl‑Space for completion.
+            Importiere direkt das zip von github & lade es hier hoch!
         </footer>
 
-        <!-- CodeMirror libs -->
+        <!-- Asset Manager Modal -->
+        <div id="assetManagerModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Manage Assets</h2>
+                <ul id="assetManagerList"></ul>
+                <button id="assetManagerClose">Close</button>
+            </div>
+        </div>
+
+        <!-- CodeMirror libraries -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/codemirror.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/xml/xml.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/css/css.min.js"></script>
@@ -137,213 +73,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/addon/edit/closetag.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/addon/edit/closebrackets.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/addon/hint/show-hint.min.js"></script>
-        <script>
-            /* ── Helpers ─────────────────────────────────────────────────────────── */
-            const $ = (sel) => document.querySelector(sel);
-            const debounce = (fn, ms) => {
-                let t;
-                return (...a) => {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn(...a), ms);
-                };
-            };
-
-            /* ── Editors + preview ───────────────────────────────────────────────── */
-            const opt = {
-                theme: "material-darker",
-                lineNumbers: true,
-                autoCloseTags: true,
-                autoCloseBrackets: true,
-                extraKeys: { "Ctrl-Space": "autocomplete" },
-            };
-            const eHTML = CodeMirror.fromTextArea($("#html"), {
-                ...opt,
-                mode: "text/html",
-            });
-            const eCSS = CodeMirror.fromTextArea($("#css"), {
-                ...opt,
-                mode: "css",
-            });
-            const eJS = CodeMirror.fromTextArea($("#js"), {
-                ...opt,
-                mode: "javascript",
-            });
-            const iframe = $("#preview");
-            function render() {
-                iframe.srcdoc = `<!doctype html><html><head><style>${eCSS.getValue()}</style></head><body>${eHTML.getValue()}<script>${eJS.getValue()}<\/script></body></html>`;
-            }
-            [eHTML, eCSS, eJS].forEach((ed) =>
-                ed.on("change", () => {
-                    render();
-                    scheduleSave();
-                }),
-            );
-
-            /* ── Layout toggle ───────────────────────────────────────────────────── */
-            $("#layoutBtn").onclick = () => {
-                const ws = $("#workspace"),
-                    eds = $("#editors");
-                if (ws.classList.contains("vertical")) {
-                    ws.classList.replace("vertical", "horizontal");
-                    eds.classList.replace("vertical", "horizontal");
-                } else {
-                    ws.classList.replace("horizontal", "vertical");
-                    eds.classList.replace("horizontal", "vertical");
-                }
-            };
-
-            /* ── Templates dropdown ─────────────────────────────────────────────── */
-            fetch("/api/templates")
-                .then((r) => r.json())
-                .then((list) => {
-                    const sel = $("#templateSelect");
-                    list.forEach((t) => {
-                        const o = document.createElement("option");
-                        o.value = t.id;
-                        o.textContent = t.name;
-                        sel.appendChild(o);
-                    });
-                    sel.onchange = () => {
-                        if (!sel.value) return;
-                        fetch(`/api/template/${sel.value}`)
-                            .then((r) => r.json())
-                            .then((t) => {
-                                eHTML.setValue(t.html || "");
-                                eCSS.setValue(t.css || "");
-                                eJS.setValue(t.js || "");
-                                currentId = null;
-                                linkElem.textContent = "";
-                                render();
-                            });
-                    };
-                });
-
-            /* ── Save / auto‑save ────────────────────────────────────────────────── */
-            let currentId =
-                (location.pathname.match(/^\/p\/(\w+)/) || [])[1] || null;
-            const linkElem = $("#link");
-            if (currentId) linkElem.textContent = location.href;
-
-            async function save() {
-                const payload = {
-                    html: eHTML.getValue(),
-                    css: eCSS.getValue(),
-                    js: eJS.getValue(),
-                };
-                const res = await fetch(
-                    currentId ? `/save/${currentId}` : "/save",
-                    {
-                        method: currentId ? "PUT" : "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
-                    },
-                );
-                if (res.ok) {
-                    const { id, url } = await res.json();
-                    currentId = id;
-                    if (url) history.replaceState(null, "", url);
-                    linkElem.textContent = location.href;
-                }
-            }
-            const scheduleSave = debounce(save, 2000); // 2 s after last edit
-            $("#saveBtn").onclick = save;
-
-            /* Export button & ZIP */
-            $("#exportBtn").onclick = async () => {
-                const payload = {
-                    html: eHTML.getValue(),
-                    css: eCSS.getValue(),
-                    js: eJS.getValue(),
-                };
-                const res = await fetch(`/package/${currentId}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                });
-                if (!res.ok) return alert("Export failed");
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "project.zip";
-                a.click();
-                URL.revokeObjectURL(url);
-            };
-
-            /* -----------UPLOAD ASSETS -------------- */
-            /* where you create currentId after a save / on load */
-
-            /* --- Upload --- */
-            document.getElementById("assetInput").onchange = async (e) => {
-                if (!currentId) {
-                    alert("Save once before uploading assets");
-                    return;
-                }
-                const fd = new FormData();
-                [...e.target.files].forEach((f) => fd.append("files", f));
-                await fetch("/upload/" + currentId, {
-                    method: "POST",
-                    body: fd,
-                });
-                loadAssets(); // refresh the drawer list
-            };
-
-            /* --- Drawer list --- */
-            async function loadAssets() {
-                if (!currentId) return;
-                const list = await fetch("/api/assets/" + currentId).then((r) =>
-                    r.json(),
-                );
-                assetList.innerHTML = "";
-                list.forEach((f) => {
-                    const a = document.createElement("a");
-                    a.href = "/assets/" + currentId + "/" + f;
-                    a.textContent = f;
-                    a.target = "_blank";
-                    assetList.appendChild(a);
-                });
-                assetList.insertAdjacentHTML(
-                    "beforebegin",
-                    `<p style="font-size:.75rem;color:#789">Use /assets/${currentId}/ … inside your HTML/CSS</p>`,
-                );
-            }
-
-            /* ── ZIP import ─────────────────────────────────────────────────────── */
-            $("#zipInput").onchange = async (e) => {
-                const [file] = e.target.files;
-                if (!file) return;
-                $("#status").textContent = "Importing…";
-                const fd = new FormData();
-                fd.append("zip", file);
-                const r = await fetch("/importzip", {
-                    method: "POST",
-                    body: fd,
-                });
-                if (!r.ok) {
-                    $("#status").textContent = "Import failed";
-                    return;
-                }
-                const { html, css, js } = await r.json();
-                eHTML.setValue(html);
-                eCSS.setValue(css);
-                eJS.setValue(js);
-                render();
-                currentId = null;
-                linkElem.textContent = "";
-                $("#status").textContent = "Imported";
-            };
-
-            /* ── Initial render ─────────────────────────────────────────────────── */
-            if (currentId)
-                fetch(`/api/project/${currentId}`)
-                    .then((r) => r.json())
-                    .then((p) => {
-                        eHTML.setValue(p.html);
-                        eCSS.setValue(p.css);
-                        eJS.setValue(p.js);
-                        render();
-                    });
-            else render();
-        </script>
+        <!-- Application script -->
+        <script src="/app.js"></script>
     </body>
 </html>
