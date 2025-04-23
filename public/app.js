@@ -84,13 +84,12 @@ const modal = document.getElementById("assetManagerModal");
 const closeBtn = document.getElementById("assetManagerClose");
 const listEl = document.getElementById("assetManagerList");
 
-mgrBtn.addEventListener("click", async () => {
-  if (!currentId) return alert("Save a project first!");
-  // 1) fetch all assets for this project
+// Reusable: fetch + render asset list with delete buttons
+async function refreshAssetManager() {
+  if (!currentId) return;
   const all = await fetch(`/api/assets/${currentId}`).then((r) => r.json());
   const used = findUsedAssets();
 
-  // 2) build list
   listEl.innerHTML = "";
   all.forEach((file) => {
     const li = document.createElement("li");
@@ -99,18 +98,20 @@ mgrBtn.addEventListener("click", async () => {
       const del = document.createElement("button");
       del.textContent = "Löschen";
       del.onclick = async () => {
-        if (!confirm(`${file} wirklich löschen?`)) return;
-        await fetch(`/api/assets/${currentId}/${file}`, {
-          method: "DELETE",
-        });
-        li.remove(); // remove from UI
+        if (!confirm(`"${file}" wirklich löschen?`)) return;
+        await fetch(`/api/assets/${currentId}/${file}`, { method: "DELETE" });
+        await refreshAssetManager(); // re-draw after delete
       };
       li.appendChild(del);
     }
     listEl.appendChild(li);
   });
+}
 
-  modal.classList.remove("hidden");
+mgrBtn.addEventListener("click", async () => {
+  if (!currentId) return alert("Save a project first!");
+  await refreshAssetManager(); // build the list
+  modal.classList.remove("hidden"); // show the modal
 });
 
 closeBtn.addEventListener("click", () => {
@@ -215,20 +216,16 @@ $("#exportBtn").addEventListener("click", async () => {
 });
 
 const assetInput = document.getElementById("assetInput");
-console.log("👀 assetInput element:", assetInput);
 
 assetInput.addEventListener("change", async (e) => {
   await saveProject();
-  console.log("👀 change event fired, files:", e.target.files);
   if (!currentId) {
-    console.warn("⚠️ No currentId, aborting upload");
     alert("Save once before uploading assets");
     return;
   }
 
   const fd = new FormData();
   for (const f of e.target.files) fd.append("files", f);
-  console.log("👀 FormData entries:", [...fd.entries()]);
 
   try {
     const res = await fetch(`/upload/${currentId}`, {
@@ -239,21 +236,20 @@ assetInput.addEventListener("change", async (e) => {
   } catch (err) {
     console.error("❌ upload failed:", err);
   }
-
-  loadAssets();
+  assetInput.value = "";
+  await refreshAssetManager();
 });
 
+// before: was using assetList
 async function loadAssets() {
   if (!currentId) return;
   const list = await fetch(`/api/assets/${currentId}`).then((r) => r.json());
-  const assetList = document.querySelector("#assetList");
-  assetList.innerHTML = "";
-  list.forEach((f) => {
-    const link = document.createElement("a");
-    link.href = `/assets/${currentId}/${f}`;
-    link.textContent = f;
-    link.target = "_blank";
-    assetList.append(link);
+  // use the modal’s <ul id="assetManagerList">
+  listEl.innerHTML = "";
+  list.forEach((file) => {
+    const li = document.createElement("li");
+    li.textContent = file + /* optional “in use” tag */ "";
+    listEl.appendChild(li);
   });
 }
 

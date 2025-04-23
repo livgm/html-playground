@@ -34,8 +34,6 @@
             </button>
             <input type="file" id="zipInput" accept=".zip" />
             <label for="zipInput" class="upload-btn">Projekt hochladen</label>
-            <input type="file" id="assetInput" multiple hidden />
-            <label for="assetInput" class="upload-btn"">Anhänge hochladen</label>
             <button id="manageAssetsBtn">Anhänge</button>
             <span id="link"></span>
             <span id="status"></span>
@@ -63,6 +61,12 @@
         <div id="assetManagerModal" class="modal hidden">
             <div class="modal-content">
                 <h2>Anhänge</h2>
+
+                <!-- New upload control inside the modal -->
+                <input type="file" id="assetInput" multiple hidden />
+                <label for="assetInput" class="upload-btn">Anhänge hochladen</label>
+
+
                 <ul id="assetManagerList"></ul>
                 <button id="assetManagerClose">Schließen</button>
             </div>
