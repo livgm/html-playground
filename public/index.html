@@ -18,14 +18,20 @@
     </head>
     <body class="light-theme">
         <header>
-            <button id="layoutBtn">Layout wechseln</button>
+            <button id="layoutBtn" class="icon-only" title="Wechsel zwischen Layouts">
+                <img src="/icons/vertical.svg" id="gridIcon" alt="Toggle layout" />
+                <img src="/icons/horizontal.svg" id="listIcon" alt="Toggle layout" style="display: none;" />
+            </button>
+
             <button id="toggleJsBtn">JS an/aus</button>
 
             <select id="templateSelect">
                 <option value>Vorlagen…</option>
             </select>
             <button id="saveBtn">Speichern</button>
-            <button id="exportBtn">Exportieren</button>
+            <button id="exportBtn" class="icon-only" title="Herunterladen">
+                <img src="/icons/download.svg" alt="Herunterladen" />
+            </button>
             <input type="file" id="zipInput" accept=".zip" />
             <label for="zipInput" class="upload-btn">Projekt hochladen</label>
             <input type="file" id="assetInput" multiple hidden />
