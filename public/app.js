@@ -1,3 +1,12 @@
+window.initPreview = function () {
+  initPreview();
+};
+
+window.renderPreview = function () {
+  renderPreview();
+};
+
+import { htmlEditor, cssEditor, jsEditor } from "./editor.js";
 // Utility functions
 const $ = (sel) => document.querySelector(sel);
 let _unsavedBackup = null;
@@ -9,26 +18,12 @@ const debounce = (fn, ms) => {
   };
 };
 
-// Initialize CodeMirror editors
-const editorOptions = {
-  theme: "material-darker",
-  lineNumbers: true,
-  autoCloseTags: true,
-  autoCloseBrackets: true,
-  extraKeys: { "Ctrl-Space": "autocomplete" },
-};
-const eHTML = CodeMirror.fromTextArea($("#html"), {
-  ...editorOptions,
-  mode: "text/html",
-});
-const eCSS = CodeMirror.fromTextArea($("#css"), {
-  ...editorOptions,
-  mode: "css",
-});
-const eJS = CodeMirror.fromTextArea($("#js"), {
-  ...editorOptions,
-  mode: "javascript",
-});
+function replaceAll(editorView, newText) {
+  editorView.dispatch({
+    changes: { from: 0, to: editorView.state.doc.length, insert: newText },
+  });
+}
+
 const preview = $("#preview");
 
 // Prefix asset paths so “assets/foo.png” → “/assets/<id>/foo.png”
@@ -77,6 +72,8 @@ function initPreview() {
         <\/script>        <script id="js-pane"><\/script>
       </body>
     </html>`);
+
+  console.log("INIT PREVIEW HAS BEEN CALLED");
   doc.close();
 }
 
@@ -85,22 +82,26 @@ function renderPreview() {
   const doc = preview.contentDocument || preview.contentWindow.document;
   const id = currentId; // your project ID
   // apply path‐prefixing
-  const html = prefixAssets(eHTML.getValue(), id);
-  const css = prefixAssets(eCSS.getValue(), id);
-  const js = eJS.getValue();
+  const html = prefixAssets(htmlEditor.state.doc.toString(), id);
+  const css = prefixAssets(cssEditor.state.doc.toString(), id);
+  const js = jsEditor.state.doc.toString();
 
   // inject into the iframe
   doc.getElementById("style-pane").textContent = css;
   doc.getElementById("html-content").innerHTML = html;
   doc.getElementById("js-pane").textContent = js;
+
+  console.log("RENDER PREVIEW HAS BEEN CALLED");
 }
 
 initPreview();
-[eHTML, eCSS, eJS].forEach((ed) => ed.on("change", renderPreview));
 
 // Utility: scan code blobs for used asset filenames
 function findUsedAssets() {
-  const code = eHTML.getValue() + eCSS.getValue() + eJS.getValue();
+  const code =
+    htmlEditor.state.doc.toString() +
+    cssEditor.state.doc.toString() +
+    jsEditor.state.doc.toString();
   const matches = code.match(/assets\/([^\s"'()]+)/g) || [];
   return new Set(matches.map((m) => m.replace(/^assets\//, "")));
 }
@@ -181,9 +182,9 @@ document.querySelector("header").appendChild(undoBtn);
 
 undoBtn.addEventListener("click", () => {
   if (!_templateBackup) return;
-  eHTML.setValue(_templateBackup.html);
-  eCSS.setValue(_templateBackup.css);
-  eJS.setValue(_templateBackup.js);
+  replaceAll(htmlEditor, _templateBackup.html);
+  replaceAll(cssEditor, _templateBackup.css);
+  replaceAll(jsEditor, _templateBackup.js);
   currentId = _templateBackup.id;
   if (currentId) {
     history.replaceState(null, "", _templateBackup.url);
@@ -212,9 +213,9 @@ fetch("/api/templates")
 
       // backup current code
       const current = {
-        html: eHTML.getValue(),
-        css: eCSS.getValue(),
-        js: eJS.getValue(),
+        html: htmlEditor.state.doc.toString(),
+        css: cssEditor.state.doc.toString(),
+        js: jsEditor.state.doc.toString(),
         id: currentId,
         url: linkElem.textContent,
       };
@@ -238,9 +239,9 @@ fetch("/api/templates")
       fetch(`/api/template/${sel.value}`)
         .then((r) => r.json())
         .then((t) => {
-          eHTML.setValue(t.html || "");
-          eCSS.setValue(t.css || "");
-          eJS.setValue(t.js || "");
+          replaceAll(htmlEditor, t.html || "");
+          replaceAll(cssEditor, t.css || "");
+          replaceAll(jsEditor, t.js || "");
           currentId = null;
           history.replaceState(null, "", `/p/`); // or just leave URL blank
           linkElem.textContent = "";
@@ -255,9 +256,9 @@ let currentId = (location.pathname.match(/^\/p\/(\S+)/) || [])[1] || null;
 if (currentId) linkElem.textContent = decodeURI(currentId);
 async function saveProject() {
   const payload = {
-    html: eHTML.getValue(),
-    css: eCSS.getValue(),
-    js: eJS.getValue(),
+    html: htmlEditor.state.doc.toString(),
+    css: cssEditor.state.doc.toString(),
+    js: jsEditor.state.doc.toString(),
   };
   const res = await fetch(currentId ? `/save/${currentId}` : "/save", {
     method: currentId ? "PUT" : "POST",
@@ -277,9 +278,9 @@ $("#saveBtn").addEventListener("click", saveProject);
 // Export ZIP
 $("#exportBtn").addEventListener("click", async () => {
   const payload = {
-    html: eHTML.getValue(),
-    css: eCSS.getValue(),
-    js: eJS.getValue(),
+    html: htmlEditor.state.doc.toString(),
+    css: cssEditor.state.doc.toString(),
+    js: jsEditor.state.doc.toString(),
   };
   const res = await fetch(`/package/${currentId}`, {
     method: "POST",
@@ -337,7 +338,6 @@ $("#zipInput").addEventListener("change", async (e) => {
   $("#status").textContent = "Importing…";
   const fd = new FormData();
   fd.append("zip", file);
-  console.log("WAIZING");
   const r = await fetch("/importzip", { method: "POST", body: fd });
   if (!r.ok) {
     $("#status").textContent = "Import failed";
@@ -349,9 +349,9 @@ $("#zipInput").addEventListener("change", async (e) => {
   console.log(html);
   console.log(css);
   console.log(js);
-  eHTML.setValue(html);
-  eCSS.setValue(css);
-  eJS.setValue(js);
+  replaceAll(htmlEditor, html);
+  replaceAll(cssEditor, css);
+  replaceAll(jsEditor, js);
   initPreview();
   console.log("INIT PREVIEW SUCCESS");
   renderPreview();
@@ -367,9 +367,15 @@ if (currentId) {
   fetch(`/api/project/${currentId}`)
     .then((r) => r.json())
     .then((p) => {
-      eHTML.setValue(p.html);
-      eCSS.setValue(p.css);
-      eJS.setValue(p.js);
+      htmlEditor.dispatch({
+        changes: { from: 0, to: htmlEditor.state.doc.length, insert: p.html },
+      });
+      cssEditor.dispatch({
+        changes: { from: 0, to: cssEditor.state.doc.length, insert: p.css },
+      });
+      jsEditor.dispatch({
+        changes: { from: 0, to: jsEditor.state.doc.length, insert: p.js },
+      });
       renderPreview();
     });
 } else {

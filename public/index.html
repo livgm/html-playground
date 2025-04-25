@@ -11,10 +11,6 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/codemirror.min.css"
         />
-        <link
-          rel="stylesheet"
-          href="/vendor/codemirror/codemirror.css"
-        />
     </head>
     <body class="light-theme">
 
@@ -57,15 +53,15 @@
             <div id="editors" class="vertical">
                 <div class="pane">
                     <h3 id="h-html"">HTML</h3>
-                    <textarea id="html"></textarea>
+                    <div id="editor-html"></div>
                 </div>
                 <div class="pane">
                     <h3 id="h-css"">CSS</h3>
-                    <textarea id="css"></textarea>
+                    <div id="editor-css"></div>
                 </div>
                 <div class="pane js-pane">
                     <h3 id="h-js">JS</h3>
-                    <textarea id="js"></textarea>
+                    <div id="editor-js"></div>
                 </div>
             </div>
             <iframe id="preview"></iframe>
@@ -86,15 +82,7 @@
             </div>
         </div>
 
-        <!-- CodeMirror libraries -->
-        <script src="/vendor/codemirror/codemirror.js"></script>
-        <script src="/vendor/codemirror/xml.js"></script>
-        <script src="/vendor/codemirror/css.js"></script>
-        <script src="/vendor/codemirror/javascript.js"></script>
-        <script src="/vendor/codemirror/closetag.js"></script>
-        <script src="/vendor/codemirror/closebrackets.js"></script>
-        <script src="/vendor/codemirror/show-hint.js"></script>
         <!-- Application script -->
-        <script src="/app.js"></script>
+        <script type="module" src="/bundle.js/app.js"></script>
     </body>
 </html>

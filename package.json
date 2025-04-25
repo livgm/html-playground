@@ -4,12 +4,15 @@
   "description": "Playground with templates, auto‑save, resizable panes, JS toggle, asset list & export ZIP",
   "main": "server.js",
   "scripts": {
+    "build:ui": "esbuild public/app.js --bundle --format=esm --outdir=public/bundle.js --minify",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "copy:codemirror": "copyfiles -u 1 node_modules/codemirror/lib/codemirror.js node_modules/codemirror/lib/codemirror.css node_modules/codemirror/mode/xml/xml.js node_modules/codemirror/mode/css/css.js node_modules/codemirror/mode/javascript/javascript.js node_modules/codemirror/addon/edit/closetag.js node_modules/codemirror/addon/edit/closebrackets.js node_modules/codemirror/addon/hint/show-hint.js node_modules/codemirror/addon/hint/html-hint.js node_modules/codemirror/addon/hint/css-hint.js node_modules/codemirror/addon/hint/javascript-hint.js public/vendor/codemirror",
-    "postinstall": "npm run copy:codemirror"
+    "postinstall": "npm run build:ui"
   },
   "dependencies": {
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-javascript": "^6.2.3",
     "adm-zip": "^0.5.10",
     "archiver": "^5.3.1",
     "codemirror": "^6.0.1",
@@ -20,6 +23,7 @@
   },
   "devDependencies": {
     "copyfiles": "^2.4.1",
+    "esbuild": "^0.25.3",
     "nodemon": "^3.0.2"
   }
 }
