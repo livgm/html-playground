@@ -1,5 +1,6 @@
 // Utility functions
 const $ = (sel) => document.querySelector(sel);
+let _unsavedBackup = null;
 const debounce = (fn, ms) => {
   let timer;
   return (...args) => {
@@ -47,7 +48,33 @@ function initPreview() {
       <head><style id="style-pane"></style></head>
       <body>
         <div id="html-content"></div>
-        <script id="js-pane"><\/script>
+        <script>
+          document.addEventListener('click', e => {
+            const a = e.target.closest('a');
+            if (!a) return;
+
+            const raw = a.getAttribute('href') || '';
+            // 1) If it starts with "www.", treat as external
+            if (/^www\\./i.test(raw)) {
+              e.preventDefault();
+              window.open('https://' + raw, '_blank');
+              return;
+            }
+
+            // 2) Otherwise resolve it and compare origins
+            let url;
+            try {
+              url = new URL(raw, location.href);
+            } catch {
+              return; // not a valid URL
+            }
+            if (url.origin !== location.origin) {
+              e.preventDefault();
+              window.open(url.href, '_blank');
+            }
+            // else let it navigate inside the iframe
+          });
+        <\/script>        <script id="js-pane"><\/script>
       </body>
     </html>`);
   doc.close();
@@ -109,6 +136,7 @@ async function refreshAssetManager() {
 }
 
 mgrBtn.addEventListener("click", async () => {
+  await saveProject();
   if (!currentId) return alert("Save a project first!");
   await refreshAssetManager(); // build the list
   modal.classList.remove("hidden"); // show the modal
@@ -142,19 +170,71 @@ $("#toggleJsBtn").addEventListener("click", () => {
   $("#editors").classList.toggle("hide-js");
 });
 
-// Templates
+// --- Templates with confirm & undo ---
+let _templateBackup = null;
+const sel = document.querySelector("#templateSelect");
+const undoBtn = document.createElement("button");
+const linkElem = document.querySelector("#link");
+undoBtn.textContent = "Vorlage rückgängig";
+undoBtn.style.display = "none";
+document.querySelector("header").appendChild(undoBtn);
+
+undoBtn.addEventListener("click", () => {
+  if (!_templateBackup) return;
+  eHTML.setValue(_templateBackup.html);
+  eCSS.setValue(_templateBackup.css);
+  eJS.setValue(_templateBackup.js);
+  currentId = _templateBackup.id;
+  if (currentId) {
+    history.replaceState(null, "", _templateBackup.url);
+    linkElem.textContent = _templateBackup.url;
+  } else {
+    linkElem.textContent = "";
+  }
+  renderPreview();
+  _templateBackup = null;
+  undoBtn.style.display = "none";
+  sel.value = ""; // reset dropdown
+});
+
 fetch("/api/templates")
   .then((r) => r.json())
   .then((list) => {
-    const sel = $("#templateSelect");
     list.forEach((t) => {
       const opt = document.createElement("option");
       opt.value = t.id;
       opt.textContent = t.name;
       sel.append(opt);
     });
+
     sel.addEventListener("change", () => {
       if (!sel.value) return;
+
+      // backup current code
+      const current = {
+        html: eHTML.getValue(),
+        css: eCSS.getValue(),
+        js: eJS.getValue(),
+        id: currentId,
+        url: linkElem.textContent,
+      };
+      const hasContent = current.html || current.css || current.js;
+
+      if (hasContent) {
+        const ok = confirm(
+          "Laden einer Vorlage überschreibt deinen aktuellen Code.\n" +
+            "Möchtest du fortfahren?",
+        );
+        if (!ok) {
+          sel.value = ""; // cancel
+          return;
+        }
+        // store backup for undo
+        _templateBackup = current;
+        undoBtn.style.display = "";
+      }
+
+      // fetch & apply
       fetch(`/api/template/${sel.value}`)
         .then((r) => r.json())
         .then((t) => {
@@ -162,15 +242,16 @@ fetch("/api/templates")
           eCSS.setValue(t.css || "");
           eJS.setValue(t.js || "");
           currentId = null;
-          $("#link").textContent = "";
+          history.replaceState(null, "", `/p/`); // or just leave URL blank
+          linkElem.textContent = "";
           renderPreview();
+          sel.value = ""; // reset
         });
     });
   });
 
 // Save / Auto-save
 let currentId = (location.pathname.match(/^\/p\/(\S+)/) || [])[1] || null;
-const linkElem = $("#link");
 if (currentId) linkElem.textContent = decodeURI(currentId);
 async function saveProject() {
   const payload = {
@@ -219,10 +300,6 @@ const assetInput = document.getElementById("assetInput");
 
 assetInput.addEventListener("change", async (e) => {
   await saveProject();
-  if (!currentId) {
-    alert("Save once before uploading assets");
-    return;
-  }
 
   const fd = new FormData();
   for (const f of e.target.files) fd.append("files", f);
@@ -260,16 +337,26 @@ $("#zipInput").addEventListener("change", async (e) => {
   $("#status").textContent = "Importing…";
   const fd = new FormData();
   fd.append("zip", file);
+  console.log("WAIZING");
   const r = await fetch("/importzip", { method: "POST", body: fd });
   if (!r.ok) {
     $("#status").textContent = "Import failed";
     return;
   }
+  console.log("IS OK");
   const { html, css, js } = await r.json();
+  console.log("SETTING VALES");
+  console.log(html);
+  console.log(css);
+  console.log(js);
   eHTML.setValue(html);
   eCSS.setValue(css);
   eJS.setValue(js);
+  initPreview();
+  console.log("INIT PREVIEW SUCCESS");
   renderPreview();
+  console.log("RENDER PREVIEW SUCCESS");
+
   currentId = null;
   $("#link").textContent = "";
   $("#status").textContent = "Imported";

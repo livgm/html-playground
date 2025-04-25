@@ -12,11 +12,23 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/codemirror.min.css"
         />
         <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/theme/material-darker.min.css"
+          rel="stylesheet"
+          href="/vendor/codemirror/codemirror.css"
         />
     </head>
     <body class="light-theme">
+
+
+
+        <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+                <defs>
+                    <filter id="marker-shape">
+                        <feTurbulence type="fractalNoise" baseFrequency="0 0.15" numOctaves="1" result="warp"/>
+                        <feDisplacementMap in="SourceGraphic" in2="warp" xChannelSelector="R" yChannelSelector="G" scale="30"/>
+                    </filter>
+                </defs>
+            </svg>
+
         <header>
             <button id="layoutBtn" class="icon-only" title="Wechsel zwischen Layouts">
                 <img src="/icons/vertical.svg" id="gridIcon" alt="Toggle layout" />
@@ -34,8 +46,10 @@
             </button>
             <input type="file" id="zipInput" accept=".zip" />
             <label for="zipInput" class="upload-btn">Projekt hochladen</label>
-            <button id="manageAssetsBtn">Anhänge</button>
-            <span id="link"></span>
+            <button id="manageAssetsBtn" class="icon-only">
+                <img src="/icons/assets.svg" alt="Anhänge" />
+            </button>
+            <a id="link"></a>
             <span id="status"></span>
         </header>
 
@@ -73,13 +87,13 @@
         </div>
 
         <!-- CodeMirror libraries -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/codemirror.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/xml/xml.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/css/css.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/javascript/javascript.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/addon/edit/closetag.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/addon/edit/closebrackets.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/addon/hint/show-hint.min.js"></script>
+        <script src="/vendor/codemirror/codemirror.js"></script>
+        <script src="/vendor/codemirror/xml.js"></script>
+        <script src="/vendor/codemirror/css.js"></script>
+        <script src="/vendor/codemirror/javascript.js"></script>
+        <script src="/vendor/codemirror/closetag.js"></script>
+        <script src="/vendor/codemirror/closebrackets.js"></script>
+        <script src="/vendor/codemirror/show-hint.js"></script>
         <!-- Application script -->
         <script src="/app.js"></script>
     </body>
