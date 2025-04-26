@@ -1,12 +1,5 @@
-window.initPreview = function () {
-  initPreview();
-};
+import { makeEditor, htmlMode, cssMode, jsMode } from "./editor.js";
 
-window.renderPreview = function () {
-  renderPreview();
-};
-
-import { htmlEditor, cssEditor, jsEditor } from "./editor.js";
 // Utility functions
 const $ = (sel) => document.querySelector(sel);
 let _unsavedBackup = null;
@@ -73,9 +66,10 @@ function initPreview() {
       </body>
     </html>`);
 
-  console.log("INIT PREVIEW HAS BEEN CALLED");
   doc.close();
 }
+
+const scheduleSave = debounce(saveProject, 2000);
 
 // 2) Update just the CSS, HTML and JS in‐place:
 function renderPreview() {
@@ -89,12 +83,38 @@ function renderPreview() {
   // inject into the iframe
   doc.getElementById("style-pane").textContent = css;
   doc.getElementById("html-content").innerHTML = html;
-  doc.getElementById("js-pane").textContent = js;
+  [...doc.querySelectorAll("script[data-user]")].forEach((s) => s.remove());
 
-  console.log("RENDER PREVIEW HAS BEEN CALLED");
+  const scriptEl = doc.createElement("script");
+  scriptEl.textContent = js;
+  scriptEl.setAttribute("data-user", "true");
+  doc.body.appendChild(scriptEl);
 }
 
+function onEditorChange() {
+  renderPreview();
+  scheduleSave();
+}
+
+const htmlEditor = makeEditor(
+  "editor-html",
+  htmlMode,
+  onEditorChange,
+  "<!-- HTML here -->",
+);
+const cssEditor = makeEditor(
+  "editor-css",
+  cssMode,
+  onEditorChange,
+  "/* CSS here */",
+);
+const jsEditor = makeEditor("editor-js", jsMode, onEditorChange, "// JS here");
+
+// replace all your old eHTML.getValue / eHTML.setValue calls with
+// htmlEditor.state.doc.toString()  &  htmlEditor.dispatch({changes…})
+
 initPreview();
+renderPreview();
 
 // Utility: scan code blobs for used asset filenames
 function findUsedAssets() {
@@ -103,7 +123,7 @@ function findUsedAssets() {
     cssEditor.state.doc.toString() +
     jsEditor.state.doc.toString();
   const matches = code.match(/assets\/([^\s"'()]+)/g) || [];
-  return new Set(matches.map((m) => m.replace(/^assets\//, "")));
+  return new Set(matches.map((m) => m.replace(/^assets\//, "").toLowerCase()));
 }
 
 // Show / hide modal
@@ -121,8 +141,9 @@ async function refreshAssetManager() {
   listEl.innerHTML = "";
   all.forEach((file) => {
     const li = document.createElement("li");
-    li.textContent = file + (used.has(file) ? " (wird benutzt)" : "");
-    if (!used.has(file)) {
+    li.textContent =
+      file + (used.has(file.toLowerCase()) ? " (wird benutzt)" : "");
+    if (!used.has(file.toLowerCase())) {
       const del = document.createElement("button");
       del.textContent = "Löschen";
       del.onclick = async () => {
@@ -272,7 +293,6 @@ async function saveProject() {
     linkElem.textContent = decodeURIComponent(currentId);
   }
 }
-const debouncedSave = debounce(saveProject, 2000);
 $("#saveBtn").addEventListener("click", saveProject);
 
 // Export ZIP
@@ -310,7 +330,6 @@ assetInput.addEventListener("change", async (e) => {
       method: "POST",
       body: fd,
     });
-    console.log("👀 upload response:", res.status, await res.json());
   } catch (err) {
     console.error("❌ upload failed:", err);
   }
@@ -335,31 +354,22 @@ async function loadAssets() {
 $("#zipInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  $("#status").textContent = "Importing…";
   const fd = new FormData();
   fd.append("zip", file);
   const r = await fetch("/importzip", { method: "POST", body: fd });
-  if (!r.ok) {
-    $("#status").textContent = "Import failed";
+  if (r.ok) {
+    alert("Import hat leider nicht funktioniert!");
     return;
   }
-  console.log("IS OK");
   const { html, css, js } = await r.json();
-  console.log("SETTING VALES");
-  console.log(html);
-  console.log(css);
-  console.log(js);
   replaceAll(htmlEditor, html);
   replaceAll(cssEditor, css);
   replaceAll(jsEditor, js);
   initPreview();
-  console.log("INIT PREVIEW SUCCESS");
   renderPreview();
-  console.log("RENDER PREVIEW SUCCESS");
 
   currentId = null;
   $("#link").textContent = "";
-  $("#status").textContent = "Imported";
 });
 
 // Initial render / load project content

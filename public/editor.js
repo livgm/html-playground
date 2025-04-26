@@ -4,42 +4,48 @@ import { html } from "@codemirror/lang-html";
 import { css } from "@codemirror/lang-css";
 import { javascript as js } from "@codemirror/lang-javascript";
 
-/**
- * Creates a CodeMirror 6 editor in the given container.
- * @param {string} containerId - ID of the parent div.
- * @param {Extension} languageExt - Language support extension.
- * @param {string} initialContent - Initial document text.
- */
-function makeEditor(containerId, languageExt, initialContent = "") {
+export const simpleScrollbarTheme = EditorView.theme(
+  {
+    /* Force the scroller to show a thin, overlay scrollbar */
+    ".cm-scroller": {
+      scrollbarWidth: "thin" /* Firefox */,
+      scrollbarColor: "rgba(0,0,0,0.3) transparent",
+    },
+    /* WebKit */
+    ".cm-scroller::-webkit-scrollbar": {
+      width: "8px",
+      height: "8px",
+    },
+    ".cm-scroller::-webkit-scrollbar-track": {
+      background: "transparent",
+    },
+    ".cm-scroller::-webkit-scrollbar-thumb": {
+      backgroundColor: "rgba(0,0,0,0.3)",
+      borderRadius: "4px",
+    },
+  },
+  { dark: false },
+);
+
+export function makeEditor(containerId, langExt, onChange, initial = "") {
   const parent = document.getElementById(containerId);
-  if (!parent) {
-    console.error(`Container #${containerId} not found`);
-    return;
-  }
+  if (!parent) throw new Error(`No container #${containerId}`);
   return new EditorView({
     parent,
     state: EditorState.create({
-      doc: initialContent,
+      doc: initial,
       extensions: [
         basicSetup,
-        languageExt,
-        // call the global renderPreview & scheduleSave
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            if (window.renderPreview) window.renderPreview();
-            if (window.scheduleSave) window.scheduleSave();
-          }
+        langExt,
+        EditorView.updateListener.of((upd) => {
+          if (upd.docChanged) onChange(upd, parent.id);
         }),
       ],
     }),
   });
 }
 
-// Export editors so app.js can import them
-export const htmlEditor = makeEditor(
-  "editor-html",
-  html(),
-  "<!-- HTML here -->",
-);
-export const cssEditor = makeEditor("editor-css", css(), "/* CSS here */");
-export const jsEditor = makeEditor("editor-js", js(), "// JS here");
+// Factory exports for each pane (we’ll wire onChange in app.js)
+export const htmlMode = html();
+export const cssMode = css();
+export const jsMode = js();

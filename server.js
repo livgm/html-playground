@@ -38,9 +38,11 @@ const colors = [
   "grün",
   "hellblau",
   "dunkelblau",
+  "hellgrün",
+  "dunkelgrün",
   "gelb",
   "orang",
-  "lilan",
+  "golden",
   "schwarz",
   "weiß",
   "braun",
@@ -62,7 +64,9 @@ const nouns = [
   [2, "blume"],
   [1, "baum"],
   [1, "roboter"],
-  [1, "libelle"],
+  [2, "libelle"],
+  [3, "baby"],
+  [2, "sonnenblume"],
 ];
 function generateId() {
   const [article, noun] = nouns[Math.floor(Math.random() * nouns.length)];
@@ -270,7 +274,7 @@ app.post("/package/:id", (req, res) => {
   const archive = archiver("zip");
   archive.pipe(res);
   archive.append(
-    `<!doctype html><html><head><link rel=\"stylesheet\" href=\"style.css\"></head><body>${html}</body><script src=\"script.js\"></script></html>`,
+    `<!doctype html><html><head><link rel=\"stylesheet\" href=\"style.css\"></head><body>${html}<script src=\"script.js\"></script></body></html>`,
     { name: "index.html" },
   );
   archive.append(css, { name: "style.css" });

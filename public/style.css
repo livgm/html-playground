@@ -1,13 +1,13 @@
-@font-face{
-    font-family: 'IBMPlex';
-    src: url('/icons/IBMPlexSans-Regular.ttf') format('truetype');
+@font-face {
+    font-family: "IBMPlex";
+    src: url("/icons/IBMPlexSans-Regular.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
 
-@font-face{
-    font-family: 'IBMMono';
-    src: url('/icons/IBMPlexMono-Regular.ttf') format('truetype');
+@font-face {
+    font-family: "IBMMono";
+    src: url("/icons/IBMPlexMono-Regular.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
@@ -22,13 +22,13 @@
     --solar-border: #93a1a1;
     --solar-glow: rgba(101, 123, 131, 0.3);
     --solar-glow-strong: rgba(101, 123, 131, 0.5);
-    font-family: "IBMMono", serif,  system-ui, sans-serif;
+    font-family: "IBMMono", serif, system-ui, sans-serif;
 }
 
 /* Layout grid: header + workspace */
 body {
     margin: 0;
-    font-family: "IBMMono",serif,  system-ui, sans-serif;
+    font-family: "IBMMono", serif, system-ui, sans-serif;
     height: 100vh;
     display: grid;
     grid-template-rows: auto 1fr;
@@ -59,6 +59,7 @@ header > * {
     display: grid;
     height: 100%;
     overflow: hidden;
+    background-color: #fafafa;
 }
 #workspace.vertical {
     grid-template-columns: var(--sidebar) 1fr;
@@ -80,39 +81,42 @@ header > * {
 }
 
 /* Pane styling */
-.pane {
-    display: flex;
-    flex-direction: column;
+#editors .pane {
+    /*display: flex;
+    flex-direction: column;*/
+    min-width: 0;
+    min-height: 0;
     border: 1px solid #333;
     overflow: hidden;
 }
 .pane h3 {
     margin: 0;
     padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-    line-height: 1.2;
+    font-size: 0.9rem;
+    line-height: 1.4;
     color: #bbb;
     background: #2a2a2a;
 }
 
 .pane #h-html {
-    color: #bbb;
-    background: #cb4b16;
+    color: #eee;
+    background: hotpink;
 }
 
 .pane #h-css {
-    color: #bbb;
-    background: #268bd2;
+    color: #eee;
+    background: rgba(58, 143, 255, 0.7);
 }
 
 .pane #h-js {
-    color: #bbb;
-    background: #b58900;
+    color: #eee;
+    background: #ffac1c;
 }
-.CodeMirror {
-    flex: 1;
+.cm-editor {
     font-size: 0.85rem;
-    background: #1e1e1e;
+    /*height: 100%;
+    width: 100%;
+    overflow: auto;*/
 }
 
 /* Hide JS pane when toggled */
@@ -138,7 +142,7 @@ iframe {
 select,
 button,
 label.upload-btn {
-    font-family: 'IBMMono', system-ui, sans-serif;
+    font-family: "IBMMono", system-ui, sans-serif;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 6px;
     padding: 0.5rem 1rem;
@@ -153,49 +157,28 @@ label.upload-btn {
         transform 100ms;
 }
 
-
 #link {
-  position: relative;
-  display: inline-block;    /* give it a real box */
-  color: inherit;
+    position: relative;
+    display: inline-block; /* give it a real box */
+    color: inherit;
 }
 
 #link::before {
-  content: "";    /* or content: ""; if you don’t need to repeat the text */
-  position: absolute;
-  left: -0.25em;
-  top: 0.1em;
+    content: ""; /* or content: ""; if you don’t need to repeat the text */
+    position: absolute;
+    left: -0.25em;
+    top: 0.1em;
 
-  /* highlight color */
-  background-color: #ff6db7;
+    /* highlight color */
+    background-color: #ff6db7;
 
-  /* make sure it covers your text height */
-  height: 1em;
-  width: calc(100% + 0.5em);
+    /* make sure it covers your text height */
+    height: 1em;
+    width: calc(100%);
 
-  /* apply your SVG filter properly */
-  filter: url("#marker-shape");
-
-  z-index: -1;
+    z-index: -1;
 }
 
-/*#link:after{
-    content:"";
-    z-index:-1;
-    left:0em;
-    top:0em;
-    border-width:2px;
-    border-style:solid;
-    border-color:darkblue;
-    border-left-color:transparent;
-    border-top-color:transparent;
-    position:absolute;
-    width:100%;
-    height:2em;
-    transform:rotate(-1deg);
-    opacity:0.5;
-    border-radius:0.3em;}
-*/
 #zipInput {
     display: none;
 }
@@ -205,40 +188,6 @@ label.upload-btn.icon-only {
     width: 2.5rem;
     padding: 0;
     justify-content: center;
-}
-
-/* Light theme for header only */
-body.light-theme header {
-    background: var(--solar-base);
-    box-shadow: 0 1px 3px var(--solar-glow);
-    border-bottom: 1px solid var(--solar-border);
-}
-body.light-theme select,
-body.light-theme button,
-body.light-theme label.upload-btn {
-    background: #ff00ff;
-    color: var(--solar-base);
-    border: 1px solid var(--solar-border);
-    box-shadow:
-        0 1px 3px var(--solar-glow),
-        0 0 6px var(--solar-glow);
-}
-body.light-theme select:hover,
-body.light-theme button:hover,
-body.light-theme label.upload-btn:hover {
-    background: #ff00ff
-
-    box-shadow:
-        0 2px 6px var(--solar-glow-strong),
-        0 0 8px var(--solar-glow-strong);
-    transform: translateY(-1px);
-}
-body.light-theme select:active,
-body.light-theme button:active,
-body.light-theme label.upload-btn:active {
-    background: #ff00ff
-    box-shadow: inset 0 1px 2px var(--solar-glow-strong);
-    transform: translateY(0);
 }
 
 /* Modal overlay and hide logic */
@@ -286,6 +235,7 @@ body.light-theme header {
 body.light-theme header select,
 body.light-theme header button,
 .modal-content button,
+.modal-content label,
 body.light-theme header label.upload-btn {
     background: #f0f0f0;
     color: var(--solar-base);
@@ -297,8 +247,9 @@ body.light-theme header label.upload-btn {
 body.light-theme header select:hover,
 body.light-theme header button:hover,
 .modal-content button:hover,
+.modal-content label:hover,
 body.light-theme header label.upload-btn:hover {
-    background: #ff00ff;
+    background: rgba(200, 0, 100, 0.3);
     color: #fff;
     box-shadow:
         0 2px 6px var(--solar-glow-strong),
@@ -309,7 +260,6 @@ body.light-theme header select:active,
 body.light-theme header button:active,
 .modal-content button:active,
 body.light-theme header label.upload-btn:active {
-    background: #ff00ff;
     box-shadow: inset 0 1px 2px var(--solar-glow-strong);
     transform: translateY(0);
 }
@@ -322,4 +272,44 @@ button.icon-only {
 button.icon-only img {
     width: 1.2rem;
     height: 1.2rem;
+}
+
+/* ------------------------------------------ */
+/* 1) Let grid & flex items actually shrink: */
+/* ------------------------------------------ */
+#editors,
+#editors .pane,
+.pane > div,           /* your #editor-html / #editor-css / #editor-js mount nodes */
+.pane .cm-editor {
+    /* CodeMirror root */
+    min-height: 0;
+}
+
+/* ------------------------------------------ */
+/* 2) Make the pane a clipped flex-column:    */
+/* ------------------------------------------ */
+.pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* ---------------------------------------------------- */
+/* 3) Let the mount node flex and hand overflow inside */
+/* ---------------------------------------------------- */
+.pane > div {
+    flex: 1 1 0; /* zero flex-basis so it won’t start “as tall as its content” */
+    display: flex; /* establish a flex container for CM6 */
+    flex-direction: column;
+}
+
+/* ------------------------------------------------------------------- */
+/* 4) The real scroll host inside CM6 (and fallback for CM5) does the */
+/*    scrolling — nothing else will grow the layout.                 */
+/* ------------------------------------------------------------------- */
+.pane .cm-editor .cm-scroller,
+.pane .CodeMirror-scroll {
+    flex: 1 1 auto;
+    overflow: auto;
 }

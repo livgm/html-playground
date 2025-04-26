@@ -4,9 +4,11 @@
   "description": "Playground with templates, auto‑save, resizable panes, JS toggle, asset list & export ZIP",
   "main": "server.js",
   "scripts": {
-    "build:ui": "esbuild public/app.js --bundle --format=esm --outdir=public/bundle.js --minify",
+    "build:ui": "esbuild public/app.js --bundle --format=esm --outfile=public/bundle.js --minify",
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "watch:ui": "esbuild public/app.js --bundle --outfile=public/bundle.js --watch",
+    "watch:server": "nodemon server.js",
+    "dev": "concurrently \"npm:watch:ui\" \"npm:watch:server\"",
     "postinstall": "npm run build:ui"
   },
   "dependencies": {
@@ -22,6 +24,7 @@
     "nanoid": "^5.0.0"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.25.3",
     "nodemon": "^3.0.2"
